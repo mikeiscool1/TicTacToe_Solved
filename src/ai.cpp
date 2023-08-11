@@ -1,7 +1,9 @@
 #include "ai.hpp"
 #include <iostream>
 
-Node::Node(Game& position, Square move, Result value, Node* parent): position(position), move(move), value(value), parent(parent) {};
+std::map<int, Node*> table;
+
+Node::Node(Game position, Result value): position(position), value(value) {};
 
 int hash(int X, int O) {
   return X | (O << 9);
@@ -12,16 +14,20 @@ void make_tree(Node* start, const Player turn) {
     if (!start->position.is_free(pos)) continue;
 
     // create new game instance
-
     Game child_game = start->position;
     child_game.turn = turn;
     child_game.place(pos, turn);
 
-    // create new node
-
-    Node* child = new Node(child_game, (Square)pos, Unrated, start);
-
     // calculate node value
+    int pos_hash = hash(child_game.X, child_game.O);
+    auto it = table.find(pos_hash);
+    if (it != table.end()) {
+      start->children.push_back(it->second);
+      continue;
+    }
+
+    // create new node
+    Node* child = new Node(child_game, Unrated);
 
     if (child_game.winner()) {
       if (turn == Player::X) child->value = X_Win;
@@ -30,6 +36,7 @@ void make_tree(Node* start, const Player turn) {
     else if (child_game.is_tie()) child->value = Tie;
 
     start->children.push_back(child);
+    table.insert({ pos_hash, child });
 
     if (child->value == Unrated) make_tree(child, turn == Player::X ? Player::O : Player::X);
   }

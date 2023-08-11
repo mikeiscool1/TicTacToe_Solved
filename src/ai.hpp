@@ -7,14 +7,11 @@
 enum Result { O_Win = -1, Unrated, Tie, X_Win };
 
 struct Node {
-  Game& position;
-  // the last move to get to this position
-  Square move;
+  Game position;
   Result value = Unrated;
-  Node* parent;
   std::vector<Node*> children;
 
-  Node(Game& position, Square move, Result value, Node* parent);
+  Node(Game position, Result value);
 };
 
 void make_tree(Node* start, const Player turn);

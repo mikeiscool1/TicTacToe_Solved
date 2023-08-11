@@ -23,7 +23,7 @@ int main() {
   }
 
   // calculate moves
-  Node* current_node = new Node(game, TL, Unrated, nullptr);
+  Node* current_node = new Node(game, Unrated);
   make_tree(current_node, Player::X);
   rate(current_node, Player::X);
 
@@ -34,12 +34,12 @@ int main() {
       // AI's turn
       // find which of the node's childrens' values match the node's value, and then use that move
       Node* best_node = *std::find_if(current_node->children.begin(), current_node->children.end(), [&current_node](Node* i) { return i->value == current_node->value; });
-      Square move = best_node->move;
 
+      game.X = best_node->position.X;
+      game.O = best_node->position.O;
+      
       // move down the tree
       current_node = best_node;
-
-      game.place(move, ai_as);
 
       if (game.winner()) {
         game.print();
@@ -95,6 +95,6 @@ int main() {
     game.turn = ai_as;
 
     // move down the tree
-    current_node = *std::find_if(current_node->children.begin(), current_node->children.end(), [&at](Node* i){ return i->move == (Square)at; });
+    current_node = *std::find_if(current_node->children.begin(), current_node->children.end(), [&game](Node* i){ return i->position.X == game.X && i->position.O == game.O; });
   }
 }
