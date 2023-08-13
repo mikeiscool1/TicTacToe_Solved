@@ -2,7 +2,7 @@
 #include "game.hpp"
 #include "ai.hpp"
 
-int main() {
+void play() {
   Game game;
   Player play_as;
   Player ai_as;
@@ -44,13 +44,13 @@ int main() {
       if (game.winner()) {
         game.print();
         std::cout << (game.turn == Player::X ? "X" : "O") << " wins!" << std::endl;
-        return 0;
+        return;
       }
 
       if (game.is_tie()) {
         game.print();
         std::cout << "Game is a tie." << std::endl;
-        return 0;
+        return;
       }
 
       game.turn = play_as;
@@ -83,13 +83,13 @@ int main() {
     if (game.winner()) {
       game.print();
       std::cout << (game.turn == Player::X ? "X" : "O") << " wins!" << std::endl;
-      return 0;
+      return;
     }
 
     if (game.is_tie()) {
       game.print();
       std::cout << "Game is a tie." << std::endl;
-      return 0;
+      return;
     }
 
     game.turn = ai_as;
@@ -97,4 +97,9 @@ int main() {
     // move down the tree
     current_node = *std::find_if(current_node->children.begin(), current_node->children.end(), [&game](Node* i){ return i->position.X == game.X && i->position.O == game.O; });
   }
+}
+
+int main() {
+  play();
+  return 0;
 }

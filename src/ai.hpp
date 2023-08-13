@@ -14,5 +14,5 @@ struct Node {
   Node(Game position, Result value);
 };
 
-void make_tree(Node* start, const Player turn);
+void make_tree(Node* start, Player turn);
 void rate(Node* start, Player turn);

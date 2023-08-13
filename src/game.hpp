@@ -1,7 +1,8 @@
 #pragma once
+#include <vector>
 
 enum class Player {
-  X, O, None
+  X, O
 };
 
 enum Square {
@@ -21,13 +22,33 @@ struct Game {
   int X = 0;
   int O = 0;
   Player turn;
+  static std::vector<int> win_cases;
 
   Game();
   Game(int X, int O, Player turn);
 
-  void place(int at, Player as);
-  bool is_free(int at);
-  bool is_tie();
-  bool winner();
-  void print();
+  inline void place(int at, Player as) {
+    if (as == Player::X) X |= at;
+    else O |= at;
+  };
+
+  inline bool is_free(int at) const {
+    if ((X | O) & at) return false;
+    return true;
+  };
+
+  inline bool is_tie() const {
+    return ((X | O) == ALL);
+  };
+
+  inline bool winner() const {
+    int bit = turn == Player::X ? X : O;
+
+    for (int win_case : win_cases)
+      if ((bit & win_case) == win_case) return true;
+
+    return false;
+  };
+
+  void print() const;
 };

@@ -5,11 +5,11 @@ std::map<int, Node*> table;
 
 Node::Node(Game position, Result value): position(position), value(value) {};
 
-int hash(int X, int O) {
+inline int hash(int X, int O) {
   return X | (O << 9);
 }
 
-void make_tree(Node* start, const Player turn) {
+void make_tree(Node* start, Player turn) {
   for (int pos = TL; pos <= BR; pos <<= 1) {
     if (!start->position.is_free(pos)) continue;
 
@@ -42,7 +42,7 @@ void make_tree(Node* start, const Player turn) {
   }
 }
 
-void rate(Node* start, const Player turn) {
+void rate(Node* start, Player turn) {
   Result best = Unrated;
   for (Node* child : start->children) {
     if (child->value == Unrated)
