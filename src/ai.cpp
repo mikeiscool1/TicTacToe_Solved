@@ -1,7 +1,8 @@
 #include "ai.hpp"
 #include <iostream>
+#include <unordered_map>
 
-std::map<int, Node*> table;
+std::unordered_map<int, std::shared_ptr<Node>> table;
 
 Node::Node(Game position, Result value): position(position), value(value) {};
 
@@ -9,7 +10,7 @@ inline int hash(int X, int O) {
   return X | (O << 9);
 }
 
-void make_tree(Node* start, Player turn) {
+void make_tree(std::shared_ptr<Node>& start, Player turn) {
   for (int pos = TL; pos <= BR; pos <<= 1) {
     if (!start->position.is_free(pos)) continue;
 
@@ -27,7 +28,7 @@ void make_tree(Node* start, Player turn) {
     }
 
     // create new node
-    Node* child = new Node(child_game, Unrated);
+    std::shared_ptr<Node> child = std::make_shared<Node>(child_game, Unrated);
 
     if (child_game.winner()) {
       if (turn == Player::X) child->value = X_Win;
@@ -35,16 +36,16 @@ void make_tree(Node* start, Player turn) {
     } 
     else if (child_game.is_tie()) child->value = Tie;
 
-    start->children.push_back(child);
     table.insert({ pos_hash, child });
+    start->children.push_back(child);
 
     if (child->value == Unrated) make_tree(child, turn == Player::X ? Player::O : Player::X);
   }
 }
 
-void rate(Node* start, Player turn) {
+void rate(std::shared_ptr<Node>& start, Player turn) {
   Result best = Unrated;
-  for (Node* child : start->children) {
+  for (std::shared_ptr<Node>& child : start->children) {
     if (child->value == Unrated)
       rate(child, turn == Player::X ? Player::O : Player::X);
 

@@ -19,8 +19,8 @@ enum Square {
 };
 
 struct Game {
-  int X = 0;
-  int O = 0;
+  int X;
+  int O;
   Player turn;
   static std::vector<int> win_cases;
 
