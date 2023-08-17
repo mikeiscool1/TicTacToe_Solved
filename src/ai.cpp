@@ -1,11 +1,11 @@
 #include "ai.hpp"
-#include <iostream>
-#include <unordered_map>
-
-std::unordered_map<int, std::shared_ptr<Node>> table;
 
 Node::Node(Game position, Result value): position(position), value(value) {};
 
+// Used to save all visited positions to prevent creating a new tree from a node of an equal board position that already has one.
+std::unordered_map<int, std::shared_ptr<Node>> table;
+
+// function that converts a board position into one integer allowing for quicker search.
 inline int hash(int X, int O) {
   return X | (O << 9);
 }
@@ -19,7 +19,7 @@ void make_tree(std::shared_ptr<Node>& start, Player turn) {
     child_game.turn = turn;
     child_game.place(pos, turn);
 
-    // calculate node value
+    // check if node has already been evaluated.
     int pos_hash = hash(child_game.X, child_game.O);
     auto it = table.find(pos_hash);
     if (it != table.end()) {
@@ -36,9 +36,12 @@ void make_tree(std::shared_ptr<Node>& start, Player turn) {
     } 
     else if (child_game.is_tie()) child->value = Tie;
 
+    // node has been evaluated, add it to the table. 
+    // If this same board position is ever revisited, it will push `child` directly, rather than creating a new node.
     table.insert({ pos_hash, child });
     start->children.push_back(child);
 
+    // If the node does not have a resolution, continue creating a tree from it.
     if (child->value == Unrated) make_tree(child, turn == Player::X ? Player::O : Player::X);
   }
 }
