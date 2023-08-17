@@ -25,6 +25,7 @@ void play() {
   // calculate moves
   std::shared_ptr<Node> current_node = std::make_shared<Node>(game, Unrated);
   make_tree(current_node, Player::X);
+  free_table();
   rate(current_node, Player::X);
 
   if (play_as == Player::X) game.print();

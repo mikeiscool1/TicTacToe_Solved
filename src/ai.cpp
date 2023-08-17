@@ -58,3 +58,10 @@ void rate(std::shared_ptr<Node>& start, Player turn) {
 
   start->value = best;
 }
+
+void free_table() {
+  for (auto&[_, ptr] : table)
+    ptr.reset();
+
+  table.clear();
+}
