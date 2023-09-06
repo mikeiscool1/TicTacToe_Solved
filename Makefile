@@ -6,7 +6,7 @@ OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SOURCES))
 TARGET = main
 
 CC = g++
-CFLAGS = -c -std=c++20 -Wall
+CFLAGS = -c -std=c++20 -O3 -Wall
 
 all: $(TARGET)
 
