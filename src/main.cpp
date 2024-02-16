@@ -23,9 +23,9 @@ void play() {
   }
 
   // calculate moves
-  std::shared_ptr<Node> current_node = std::make_shared<Node>(game, Unrated);
+  Node current_node = { game, Unrated };
+  reserve();
   make_tree(current_node, Player::X);
-  free_table();
   rate(current_node, Player::X);
 
   if (play_as == Player::X) game.print();
@@ -34,13 +34,13 @@ void play() {
     if (game.turn == ai_as) {
       // AI's turn
       // find which of the node's childrens' values match the node's value, and then use that move
-      std::shared_ptr<Node>& best_node = *std::find_if(current_node->children.begin(), current_node->children.end(), 
-        [&current_node](std::shared_ptr<Node>& i)
-        { return i->value == current_node->value; }
+      const Node& best_node = **std::find_if(current_node.children.begin(), current_node.children.end(), 
+        [&current_node](Node* i)
+        { return i->value == current_node.value; }
       );
 
-      game.X = best_node->position.X;
-      game.O = best_node->position.O;
+      game.X = best_node.position.X;
+      game.O = best_node.position.O;
       
       // move down the tree
       current_node = best_node;
@@ -99,8 +99,8 @@ void play() {
     game.turn = ai_as;
 
     // move down the tree
-    current_node = *std::find_if(current_node->children.begin(), current_node->children.end(), 
-      [&game](std::shared_ptr<Node>& i) 
+    current_node = **std::find_if(current_node.children.begin(), current_node.children.end(), 
+      [&game](Node* i) 
       { return i->position.X == game.X && i->position.O == game.O; }
     );
   }
