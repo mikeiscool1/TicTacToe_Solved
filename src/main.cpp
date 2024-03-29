@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "game.hpp"
 #include "ai.hpp"
 
@@ -15,7 +16,7 @@ void play() {
     if (turn == "X" || turn == "x") play_as = Player::X, ai_as = Player::O;
     else if (turn == "O" || turn == "o") play_as = Player::O, ai_as = Player::X;
     else {
-      std::cout << "Invalid input. Try again." << std::endl;
+      std::cout << "Invalid input. Try again.\n";
       continue;
     }
 
@@ -23,21 +24,30 @@ void play() {
   }
 
   // calculate moves
-  Node current_node = { game, Unrated };
+  Node current_node = { game, Unrated, 0 };
   reserve();
-  make_tree(current_node, Player::X);
-  rate(current_node, Player::X);
+  current_node.value = minimax(current_node, Player::X, 0).result;
 
   if (play_as == Player::X) game.print();
 
+  Player turn = Player::X;
+
   while (true) {
-    if (game.turn == ai_as) {
-      // AI's turn
-      // find which of the node's childrens' values match the node's value, and then use that move
-      const Node& best_node = **std::find_if(current_node.children.begin(), current_node.children.end(), 
-        [&current_node](Node* i)
-        { return i->value == current_node.value; }
-      );
+    if (turn == ai_as) {
+      std::vector<Node*> best_nodes;
+      best_nodes.reserve(8);
+
+      for (Node* node : current_node.children)
+        if (node->value == current_node.value) best_nodes.push_back(node);
+
+      Node best_node = *best_nodes[0];
+      if (current_node.value != Tie) {
+        // try winning faster
+        // We dont have to worry about if we're losing, because the AI can never be losing.
+        for (const Node* node : best_nodes)
+          if (node->rating_depth < best_node.rating_depth)
+            best_node = *node;
+      }
 
       game.X = best_node.position.X;
       game.O = best_node.position.O;
@@ -45,19 +55,19 @@ void play() {
       // move down the tree
       current_node = best_node;
 
-      if (game.winner()) {
+      if (game.winner(turn)) {
         game.print();
-        std::cout << (game.turn == Player::X ? "X" : "O") << " wins!" << std::endl;
+        std::cout << (turn == Player::X ? "X" : "O") << " wins!\n";
         return;
       }
 
       if (game.is_tie()) {
         game.print();
-        std::cout << "Game is a tie." << std::endl;
+        std::cout << "Game is a tie.\n";
         return;
       }
 
-      game.turn = play_as;
+      turn = play_as;
 
       game.print();
       continue;
@@ -69,7 +79,7 @@ void play() {
     std::cin >> square;
 
     if (square > 9 || square < 1) {
-      std::cout << "Invalid square." << std::endl;
+      std::cout << "Invalid square.\n";
       std::cin.clear();
       std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Discard the remaining input
       continue;
@@ -78,25 +88,25 @@ void play() {
     int at = 1 << (square - 1);
 
     if (!game.is_free(at)) {
-      std::cout << "Square is already occupied" << std::endl;
+      std::cout << "Square is already occupied\n";
       continue;
     }
 
-    game.place(at, game.turn);
+    game.place(at, turn);
 
-    if (game.winner()) {
+    if (game.winner(turn)) {
       game.print();
-      std::cout << (game.turn == Player::X ? "X" : "O") << " wins!" << std::endl;
+      std::cout << (turn == Player::X ? "X" : "O") << " wins!\n";
       return;
     }
 
     if (game.is_tie()) {
       game.print();
-      std::cout << "Game is a tie." << std::endl;
+      std::cout << "Game is a tie.\n";
       return;
     }
 
-    game.turn = ai_as;
+    turn = ai_as;
 
     // move down the tree
     current_node = **std::find_if(current_node.children.begin(), current_node.children.end(), 

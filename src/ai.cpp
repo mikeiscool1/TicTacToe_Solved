@@ -1,16 +1,17 @@
 #include "ai.hpp"
 #include <iostream>
 
-Node::Node(Game position, Result value): position(position), value(value) {};
+Node::Node(Game& position, Result value, int rating_depth): 
+  position(position), value(value), rating_depth(rating_depth) {}
 
 std::vector<Node> nodes;
 std::unordered_map<int, Node*> table;
 
 void reserve() {
-  // reserve enough space to support all possible tic tac toe positions
+  // reserve just enough space for all the nodes created.
+  // This number can be calculated by seeing the size of `nodes` is after running `minimax`
   // Necessary because if a new vector is allocated due to needing new space, all pointers become invalid (dangling)
-  // This number can be calculated by seeing the size of `nodes` is after running `make_tree`
-  // Making this number any smaller will cause the entire program to fail. See second comment.
+  // Therefore, making this number any smaller will cause the entire program to fail.
   nodes.reserve(5477);
 }
 
@@ -19,52 +20,53 @@ inline int hash(int X, int O) {
   return X | (O << 9);
 }
 
-void make_tree(Node& start, Player&& turn) {
+Output minimax(Node& node, Player turn, int depth) {
+  // create children nodes
+  Player other_player = turn == Player::X ? Player::O : Player::X;
+
+  // slight optimization
+  int children_amount = 9 - __builtin_popcount(node.position.X | node.position.O);
+  node.children.reserve(children_amount);
+
   for (int pos = TL; pos <= BR; pos <<= 1) {
-    if (!start.position.is_free(pos)) continue;
+    if (!node.position.is_free(pos)) continue;
+    Game position = node.position;
+    position.place(pos, turn);
 
-    // create new game instance
-    Game child_game = start.position;
-    child_game.turn = turn;
-    child_game.place(pos, turn);
-
-    // check if node has already been evaluated.
-    int pos_hash = hash(child_game.X, child_game.O);
-    auto it = table.find(pos_hash);
-    if (it != table.end()) {
-      start.children.push_back(it->second);
+    int pos_hash = hash(position.X, position.O);
+    if (auto it = table.find(pos_hash); it != table.end()) {
+      node.children.push_back(it->second);
       continue;
     }
 
-    // create new node
-    nodes.push_back({ child_game, Unrated });
-    Node& child = nodes.back();
+    Result child_result = Unrated;
+    if (position.winner(turn)) {
+      if (turn == Player::X) child_result = X_Win;
+      else child_result = O_Win;
+    }
+    else if (position.is_tie()) child_result = Tie;
 
-    if (child_game.winner()) {
-      if (turn == Player::X) child.value = X_Win;
-      else child.value = O_Win;
-    } 
-    else if (child_game.is_tie()) child.value = Tie;
+    nodes.push_back({ position, child_result });
+    Node* child = &nodes.back();
 
-    // node has been evaluated, add it to the table. 
-    // If this same board position is ever revisited, it will push `child` directly, rather than creating a new node.
-    table.insert({ pos_hash, &child });
-    start.children.push_back(&child);
-
-    // If the node does not have a resolution, continue creating a tree from it.
-    if (child.value == Unrated) make_tree(child, turn == Player::X ? Player::O : Player::X);
-  }
-}
-
-void rate(Node& start, Player turn) {
-  Result best = Unrated;
-  for (Node* child : start.children) {
-    if (child->value == Unrated)
-      rate(*child, turn == Player::X ? Player::O : Player::X);
-
-    if (turn == Player::X && (child->value > best || best == Unrated)) best = child->value;
-    else if (turn == Player::O && (child->value < best || best == Unrated)) best = child->value;
+    node.children.push_back(child);
+    table.insert({ pos_hash, child });
   }
 
-  start.value = best;
+  // rate
+  Result best_value = turn == Player::X ? O_Win : X_Win;
+  for (Node* child : node.children) {
+    if (child->value == Unrated) {
+      Output output = minimax(*child, other_player, depth + 1);
+      child->value = output.result;
+      child->rating_depth = output.depth;
+    }
+
+    best_value = turn == Player::X 
+      ? std::max(best_value, child->value) 
+      : std::min(best_value, child->value);
+  }
+
+  node.rating_depth = depth;
+  return { best_value, depth };
 }

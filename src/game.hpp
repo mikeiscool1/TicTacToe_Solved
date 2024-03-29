@@ -21,8 +21,9 @@ enum Square {
 struct Game {
   int X;
   int O;
-  Player turn;
   static std::vector<int> win_cases;
+
+  // turn has to be remembered by the program, it is not stored here.
 
   Game();
   Game(int X, int O, Player turn);
@@ -41,7 +42,7 @@ struct Game {
     return ((X | O) == ALL);
   };
 
-  inline bool winner() const {
+  inline bool winner(Player turn) const {
     int bit = turn == Player::X ? X : O;
 
     for (int win_case : win_cases)

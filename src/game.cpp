@@ -1,8 +1,8 @@
 #include "game.hpp"
 #include <iostream>
 
-Game::Game(): X(0), O(0), turn(Player::X) {};
-Game::Game(int X, int O, Player turn) : X(X), O(O), turn(turn) {};
+Game::Game(): X(0), O(0) {};
+Game::Game(int X, int O, Player turn) : X(X), O(O) {};
 
 std::vector<int> Game::win_cases = {
   TL | TM | TR,
@@ -33,7 +33,7 @@ void Game::print() const {
     {
       std::cout << "\n|     |     |     |\n+-----+-----+-----+";
       if (i != 8) std::cout << "\n|     |     |     |\n|";
-      else std::cout << std::endl;
+      else std::cout << '\n';
     }
   }
 }
